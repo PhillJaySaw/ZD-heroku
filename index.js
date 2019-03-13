@@ -1,48 +1,65 @@
+const express = require('express');
+const app = express();
+const port = 3000;
+
 const mongoose = require('mongoose');
 const databaseURI = 'mongodb://localhost:27017/myapp';
+const UserSchema = require('./helpers/user.schema');
 
 mongoose.connect(databaseURI);
 
-// You can read more about Schemas in the documentation
-// https://mongoosejs.com/docs/schematypes.html
-
-const Schema = mongoose.Schema;
-const UserSchema = new Schema({
-    firstName: String,
-    lastName: String,
-});
-
 const UserModel = mongoose.model('User', UserSchema);
 
-// You can read more about method in Model object in the documentation
-// https://mongoosejs.com/docs/api.html#Model
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
 
-UserModel.create({ firstName: 'Dawid', lastName: 'Kędzierski' }, (err) => {
-    if (err) {
-        console.error(err);
-    }
+app.get('/users', (req, res) => {
+    UserModel.find({}, 'firstName lastName', (err, data) => {
+        res.send({
+            data: data.map((user) => { return { id: user._id, firstName: user.firstName, lastName: user.lastName }}),
+        });
+    });
 });
 
-// UserModel.find({ firstName: 'Dawid' }, (err, data) => {
-//     if (err) {
-//         console.error(err);
-//     }
-//
-//     console.log(data);
-// });
+app.post('/users', (req, res) => {
+    if (!req.body.firstName || !req.body.lastName) {
+        return res.sendStatus(400);
+    }
 
-// const userId = '5c891cb919caba6b50f492a4';
+    UserModel.create({ firstName: req.body.firstName, lastName: req.body.lastName }, (err) => {
+        if (err) {
+            console.error(err);
+            return res.sendStatus(500);
+        }
 
-// UserModel.updateOne({ _id: userId }, { lastName: 'Kędzierski' }, (err, raw) => {
-//     if (err) {
-//         console.error(err);
-//     }
-//
-//     console.log(raw);
-// });
+        return res.sendStatus(204);
+    });
+});
 
-// UserModel.deleteOne({ _id: userId }, (err) => {
-//     if (err) {
-//         console.error(err);
-//     }
-// });
+app.put('/users/:userId', (req, res) => {
+    if (!req.body.firstName || !req.body.lastName) {
+        return res.sendStatus(400);
+    }
+
+    UserModel.updateOne({ _id: req.params.userId }, { firstName: req.body.firstName, lastName: req.body.lastName }, (err) => {
+        if (err) {
+            console.error(err);
+            return res.sendStatus(500);
+        }
+
+        return res.sendStatus(204);
+    });
+});
+
+app.delete('/users/:userId', (req, res) => {
+    UserModel.deleteOne({ _id: req.params.userId }, (err) => {
+        if (err) {
+            console.error(err);
+            return res.sendStatus(500);
+        }
+
+        return res.sendStatus(204);
+    });
+});
+
+app.listen(port, () => console.log(`App listening on port ${port}!`));
