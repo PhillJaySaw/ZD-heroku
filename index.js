@@ -16,6 +16,10 @@ const UserModel = mongoose.model("User", UserSchema);
 const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 
+app.get("/home", (req, res) => {
+	res.send({ data: "zadanie domowe" });
+});
+
 app.get("/users", (req, res) => {
 	UserModel.find({}, "firstName lastName", (err, data) => {
 		res.send({
