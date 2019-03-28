@@ -79,4 +79,6 @@ app.delete("/users/:userId", (req, res) => {
 	});
 });
 
-app.listen(port, () => console.log(`App listening on port ${port}!`));
+app.listen(process.env.PORT || 3000, () =>
+	console.log(`App listening on port ${port}!`)
+);
