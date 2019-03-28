@@ -1,65 +1,82 @@
-const express = require('express');
+const express = require("express");
 const app = express();
 const port = 3000;
 
-const mongoose = require('mongoose');
-const databaseURI = 'mongodb://localhost:27017/myapp';
-const UserSchema = require('./helpers/user.schema');
+var user = encodeURIComponent("Phillip");
+var password = encodeURIComponent("18041997");
 
-mongoose.connect(databaseURI);
+const mongoose = require("mongoose");
+const databaseURI = `mongodb+srv://${user}:${password}@wmi-test-nodejs-jzsvj.mongodb.net/test?retryWrites=true`;
+const UserSchema = require("./helpers/user.schema");
 
-const UserModel = mongoose.model('User', UserSchema);
+mongoose.connect(databaseURI, { useNewUrlParser: true });
 
-const bodyParser = require('body-parser');
+const UserModel = mongoose.model("User", UserSchema);
+
+const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 
-app.get('/users', (req, res) => {
-    UserModel.find({}, 'firstName lastName', (err, data) => {
-        res.send({
-            data: data.map((user) => { return { id: user._id, firstName: user.firstName, lastName: user.lastName }}),
-        });
-    });
+app.get("/users", (req, res) => {
+	UserModel.find({}, "firstName lastName", (err, data) => {
+		res.send({
+			data: data.map(user => {
+				return {
+					id: user._id,
+					firstName: user.firstName,
+					lastName: user.lastName
+				};
+			})
+		});
+	});
 });
 
-app.post('/users', (req, res) => {
-    if (!req.body.firstName || !req.body.lastName) {
-        return res.sendStatus(400);
-    }
+app.post("/users", (req, res) => {
+	if (!req.body.firstName || !req.body.lastName) {
+		return res.sendStatus(400);
+	}
 
-    UserModel.create({ firstName: req.body.firstName, lastName: req.body.lastName }, (err) => {
-        if (err) {
-            console.error(err);
-            return res.sendStatus(500);
-        }
+	// odbpytać find zeby sprawdzić czy taki użytkownik juz istnieje
+	UserModel.create(
+		{ firstName: req.body.firstName, lastName: req.body.lastName },
+		err => {
+			if (err) {
+				console.error(err);
+				return res.sendStatus(500);
+			}
 
-        return res.sendStatus(204);
-    });
+			return res.sendStatus(204);
+		}
+	);
 });
 
-app.put('/users/:userId', (req, res) => {
-    if (!req.body.firstName || !req.body.lastName) {
-        return res.sendStatus(400);
-    }
+app.put("/users/:userId", (req, res) => {
+	if (!req.body.firstName || !req.body.lastName) {
+		return res.sendStatus(400);
+	}
 
-    UserModel.updateOne({ _id: req.params.userId }, { firstName: req.body.firstName, lastName: req.body.lastName }, (err) => {
-        if (err) {
-            console.error(err);
-            return res.sendStatus(500);
-        }
+	UserModel.updateOne(
+		{ _id: req.params.userId },
+		{ firstName: req.body.firstName, lastName: req.body.lastName },
+		err => {
+			if (err) {
+				console.error(err);
+				return res.sendStatus(500);
+			}
 
-        return res.sendStatus(204);
-    });
+			return res.sendStatus(204);
+		}
+	);
 });
 
-app.delete('/users/:userId', (req, res) => {
-    UserModel.deleteOne({ _id: req.params.userId }, (err) => {
-        if (err) {
-            console.error(err);
-            return res.sendStatus(500);
-        }
+app.delete("/users/:userId", (req, res) => {
+	UserModel.deleteOne({ _id: req.params.userId }, err => {
+		if (err) {
+			console.error(err);
+			return res.sendStatus(500);
+		}
 
-        return res.sendStatus(204);
-    });
+		return res.sendStatus(204);
+	});
 });
 
 app.listen(port, () => console.log(`App listening on port ${port}!`));
